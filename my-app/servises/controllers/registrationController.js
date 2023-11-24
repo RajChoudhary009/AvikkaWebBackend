@@ -6,7 +6,8 @@ const fast2sms = require('fast-two-sms');
 const generateJWT = (mobile_num, otp) => {
   const payload = { mobile_num, otp };
   const secretKey = 'Diwkar@321'; // Replace with your secret key
-  const token = jwt.sign(payload, secretKey, { expiresIn: '15m' }); // You can adjust the expiration time
+  const expirationTime = 90 * 24 * 60 * 60;
+  const token = jwt.sign(payload, secretKey, { expiresIn: expirationTime }); // You can adjust the expiration time
   return token;
 };
 

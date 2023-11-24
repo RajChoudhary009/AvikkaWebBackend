@@ -51,7 +51,9 @@ const getbyId = async (req, res) => {
     const bannerId = req.params.id;
     try {
         // Find the banner by its ID
-        const data = await carousel.findOne({ where: { id: bannerId } });
+        const banner = await carousel.findOne({ where: { id: bannerId } });
+
+        const data = banner.slice(0, 50).map((item) => item);
 
         if (!data) {
             return res.status(404).json({ error: 'Banner not found' });

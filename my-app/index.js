@@ -15,6 +15,9 @@ const subCategories = require('./servises/routes/subCategories');
 const item = require('./servises/routes/item')
 const addtocart = require('./servises/routes/addtocart')
 const brand = require('./servises/routes/brand')
+const payment = require('./servises/routes/payment')
+const address = require('./servises/routes/address')
+const specification = require('./servises/routes/specification')
 
 
 testDbConnection();
@@ -37,6 +40,9 @@ app.use('/', subCategories);
 app.use('/', item);
 app.use('/', addtocart);
 app.use('/', brand);
+app.use('/', payment);
+app.use('/', address);
+app.use('/', specification)
 
 
 app.get('/hello', (req, res)=>{

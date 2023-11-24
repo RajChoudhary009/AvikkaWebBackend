@@ -1,4 +1,5 @@
-const { Op } = require('sequelize');
+const registration = require('../models/registration');
+const { Op, sequelize } = require('sequelize');
 const products = require('../models/product')
 const multer = require('multer');
 const path = require('path');
@@ -275,7 +276,7 @@ const Addproduct = async (req, res) => {
 
             });
 
-            return res.json({ message: 'Product added successfully', data: data});
+            return res.json({ message: 'Product added successfully', data: data });
         });
     } catch (error) {
         console.error(error);
@@ -286,9 +287,8 @@ const Addproduct = async (req, res) => {
 const getproduct = async (req, res) => {
 
     try {
-        const product = await products.findAll();
-        // res.json(products);
-        // console.log(product, "products")
+        const limitedData = await products.findAll();
+        const product = limitedData.slice(0, 100).map((item) => item);
 
         return res.status(200).send({
             success: 'success',
@@ -384,7 +384,145 @@ const fillterData = async (req, res) => {
     }
 }
 
+const fillterDataget = async (req, res) => {
+    try {
+        const { fillterData, applyType } = req.body;
+        let modifiedProducts = [];
+        console.log(fillterData);
+        console.log(applyType);
 
-module.exports = { Addproduct, getproduct, productdetail, fillterData, productDeleteById}
+        //  // Calculate the date 20 days ago
+        //  const twentyDaysAgo = new Date();
+        //  twentyDaysAgo.setDate(twentyDaysAgo.getDate() - 20);
+        //  console.log("date",twentyDaysAgo.setDate(twentyDaysAgo.getDate() - 20))
+
+        // console.log(req.user.mobile_num);
+        
+        if (applyType === "product_price") {
+            for (const eachFilter of fillterData) {
+                const minimum = eachFilter.split('-')[0].split('.')[1]
+                const maximum = eachFilter.split('-')[1].split('.')[1]
+
+                const filteredProducts = await products.findAll({
+                    where: {
+                        [applyType]: {
+                            [Op.between]: [minimum, maximum], // Case-insensitive filter with wildcard
+                        },
+                    },
+                });
+
+                const newProducts = filteredProducts.filter(
+                    (product) => !modifiedProducts.some((existingProduct) => existingProduct.product_id === product.product_id)
+                );
+
+                modifiedProducts = [...modifiedProducts, ...newProducts];
+            }
+            res.status(200).send(modifiedProducts);
+
+        } else if (applyType === "High Price") {
+            const filteredProducts = await products.findAll({
+                order: [['product_price', 'DESC']],
+            });
+
+            const newProducts = filteredProducts.filter(
+                (product) => !modifiedProducts.some((existingProduct) => existingProduct.product_id === product.product_id)
+            );
+
+            modifiedProducts = [...modifiedProducts, ...newProducts];
+            res.status(200).send(modifiedProducts);
+
+        } else if (applyType === "Low Price") {
+            const filteredProducts = await products.findAll({
+                order: [['product_price', 'ASC']],
+            });
+
+            const newProducts = filteredProducts.filter(
+                (product) => !modifiedProducts.some((existingProduct) => existingProduct.product_id === product.product_id)
+            );
+
+            modifiedProducts = [...modifiedProducts, ...newProducts];
+            res.status(200).send(modifiedProducts);
+
+        }else if (applyType === "Discount") {
+            const filteredProducts = await products.findAll({
+                order: [['discount', 'DESC']],
+            });
+
+            const newProducts = filteredProducts.filter(
+                (product) => !modifiedProducts.some((existingProduct) => existingProduct.product_id === product.product_id)
+            );
+
+            modifiedProducts = [...modifiedProducts, ...newProducts];
+            res.status(200).send(modifiedProducts);
+
+        }else if (applyType === "Rating") {
+            const filteredProducts = await products.findAll({
+                order: [['rating', 'DESC']],
+            });
+
+            const newProducts = filteredProducts.filter(
+                (product) => !modifiedProducts.some((existingProduct) => existingProduct.product_id === product.product_id)
+            );
+
+            modifiedProducts = [...modifiedProducts, ...newProducts];
+            res.status(200).send(modifiedProducts);
+
+        } else {
+            // let modifiedProducts = [];
+            for (const eachFilter of fillterData) {
+                const filteredProducts = await products.findAll({
+                    where: {
+                        [applyType]: {
+                            [Op.like]: `%${eachFilter}%`, // Case-insensitive filter with wildcard
+                        },
+                        createdAt: {
+                            [Op.lt]: new Date(),
+                            [Op.gt]: new Date(new Date() - 70* 24 * 60 * 60 * 1000)
+                          }
+                    },
+                });
+
+
+                const newProducts = filteredProducts.filter(
+                    (product) => !modifiedProducts.some((existingProduct) => existingProduct.product_id === product.product_id)
+                );
+
+                modifiedProducts = [...modifiedProducts, ...newProducts];
+            }
+
+            res.status(200).send(modifiedProducts);
+        }
+    } catch (error) {
+        console.error("Error in fillterDataget:", error);
+        res.status(500).send("Internal Server Error");
+    }
+};
+
+const fillterNewData = async(req, res) => {
+    try {
+        const limitedData = await products.findAll({
+            where: {
+                createdAt: {
+                    [Op.lt]: new Date(),
+                    [Op.gt]: new Date(new Date() - 70* 24 * 60 * 60 * 1000)
+                  }
+            },
+        });
+        const product = limitedData.slice(0, 100).map((item) => item);
+
+        return res.status(200).send({
+            success: 'success',
+            result: product,
+        });
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+}
+
+
+
+module.exports = { Addproduct, getproduct, productdetail, fillterData, productDeleteById, fillterDataget, fillterNewData }
 
 // module.exports = { productsData, getAllData, fillterData, getDataById, productDeleteById, editProductById }

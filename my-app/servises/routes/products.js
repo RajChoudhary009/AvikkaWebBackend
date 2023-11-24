@@ -1,5 +1,6 @@
 const express = require('express');
 const route = express.Router();
+const {userAuth} = require('../middleware/authmiddleware')
 // const multer = require('multer');
 // const path = require("path");
 
@@ -29,6 +30,8 @@ route.get('/product/',productsController.getproduct)
 route.get('/product/productdetail/:productId',productsController.productdetail)
 route.delete('/api/products/delete/:product_id', productsController.productDeleteById)
 route.get('/api/products/all/filter', productsController.fillterData)
+route.post('/api/products/all/filter/data', userAuth, productsController.fillterDataget)
+route.get('/api/products/all/filter/new', productsController.fillterNewData)
 
 
 module.exports = route
